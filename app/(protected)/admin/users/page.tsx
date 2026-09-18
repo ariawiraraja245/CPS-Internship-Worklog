@@ -7,6 +7,15 @@ export default function UserManagementPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Add User State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState("USER");
+  const [newStatus, setNewStatus] = useState("APPROVED");
+  const [isAdding, setIsAdding] = useState(false);
+
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -46,10 +55,49 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAdding(true);
+    setMessage("");
+
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: newUsername,
+          email: newEmail,
+          password: newPassword,
+          role: newRole,
+          status: newStatus
+        }),
+      });
+
+      if (res.ok) {
+        setMessage("Berhasil menambahkan akun baru!");
+        setShowAddModal(false);
+        setNewUsername("");
+        setNewEmail("");
+        setNewPassword("");
+        fetchUsers();
+      } else {
+        const data = await res.json();
+        setMessage(data.message || "Gagal menambahkan akun");
+      }
+    } catch (err) {
+      setMessage("Terjadi kesalahan saat menambah akun");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   return (
     <div>
-      <div className="header">
+      <div className="header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>Manajemen Pengguna</h1>
+        <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+          + Tambah Akun
+        </button>
       </div>
 
       <div className="card">
@@ -108,6 +156,53 @@ export default function UserManagementPage() {
           </table>
         )}
       </div>
+
+      {showAddModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100
+        }}>
+          <div className="card" style={{ width: "90%", maxWidth: "450px" }}>
+            <h3 style={{ marginBottom: "16px", color: "var(--primary-color)" }}>Tambah Akun Baru</h3>
+            <form onSubmit={handleAddUser}>
+              <div className="form-group">
+                <label>Username</label>
+                <input type="text" value={newUsername} onChange={e => setNewUsername(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Password</label>
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Role</label>
+                <select value={newRole} onChange={e => setNewRole(e.target.value)}>
+                  <option value="USER">User (Peserta)</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select value={newStatus} onChange={e => setNewStatus(e.target.value)}>
+                  <option value="APPROVED">Disetujui (Approved)</option>
+                  <option value="PENDING">Menunggu (Pending)</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>
+                  Batal
+                </button>
+                <button type="submit" className="btn-primary" disabled={isAdding}>
+                  {isAdding ? "Menyimpan..." : "Simpan Akun"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

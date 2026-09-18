@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { category, problem, action, result, learning, status, actionPhoto } = await req.json();
+    const { category, problem, action, result, learning, status, actionPhoto, dueDate } = await req.json();
 
     if (!category || !problem || !action || !result || !learning || !status) {
       return NextResponse.json({ message: "Data tidak lengkap" }, { status: 400 });
@@ -25,6 +25,7 @@ export async function POST(req: Request) {
         action,
         result,
         learning,
+        dueDate: dueDate ? new Date(dueDate) : null,
         status,
         actionPhoto
       }
@@ -45,7 +46,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, problem, action, result, learning, status } = await req.json();
+    const { id, problem, action, result, learning, status, dueDate } = await req.json();
 
     if (!id || !problem || !action || !result || !learning || !status) {
       return NextResponse.json({ message: "Data tidak lengkap" }, { status: 400 });
@@ -69,6 +70,7 @@ export async function PUT(req: Request) {
         action,
         result,
         learning,
+        dueDate: dueDate ? new Date(dueDate) : null,
         status,
       }
     });

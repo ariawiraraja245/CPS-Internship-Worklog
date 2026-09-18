@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const CATEGORIES = [
@@ -20,10 +20,19 @@ export default function CreateWorklogPage() {
   const [result, setResult] = useState("");
   const [learning, setLearning] = useState("");
   const [workStatus, setWorkStatus] = useState("Proses");
+  const [dueDate, setDueDate] = useState("");
   const [actionPhoto, setActionPhoto] = useState<string | null>(null);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if ((workStatus === "Proses" || workStatus === "Tertunda") && !dueDate) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setDueDate(tomorrow.toISOString().split("T")[0]);
+    }
+  }, [workStatus]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +59,7 @@ export default function CreateWorklogPage() {
       const res = await fetch("/api/worklog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, problem, action, result, learning, status: workStatus, actionPhoto }),
+        body: JSON.stringify({ category, problem, action, result, learning, status: workStatus, actionPhoto, dueDate }),
       });
 
       if (res.ok) {
@@ -155,6 +164,21 @@ export default function CreateWorklogPage() {
                   <option value="Tertunda">Tertunda</option>
                 </select>
               </div>
+
+              {(workStatus === "Proses" || workStatus === "Tertunda") && (
+                <div className="form-group">
+                  <label>Target Selesai (Tenggat Waktu)</label>
+                  <input 
+                    type="date" 
+                    value={dueDate} 
+                    onChange={e => setDueDate(e.target.value)} 
+                    required 
+                  />
+                  <small style={{ color: "var(--secondary-color)", marginTop: "4px", display: "block" }}>
+                    Tentukan tanggal target penyelesaian (Default: Besok).
+                  </small>
+                </div>
+              )}
 
               <div style={{ marginTop: "32px" }}>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>

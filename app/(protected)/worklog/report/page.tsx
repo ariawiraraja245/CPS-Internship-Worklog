@@ -38,6 +38,7 @@ export default function WorklogReportPage() {
   const [editResult, setEditResult] = useState("");
   const [editLearning, setEditLearning] = useState("");
   const [editStatus, setEditStatus] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [confirmApproveLog, setConfirmApproveLog] = useState<any>(null);
 
@@ -156,6 +157,9 @@ export default function WorklogReportPage() {
         ['Aksi', log.action],
         ['Hasil', log.result],
         ['Pelajaran', log.learning || '-'],
+        ...( (log.status === 'Proses' || log.status === 'Tertunda') && log.dueDate 
+          ? [['Target Selesai', new Date(log.dueDate).toLocaleDateString("id-ID")]] 
+          : [] ),
       ],
     });
 
@@ -241,6 +245,7 @@ export default function WorklogReportPage() {
     setEditResult(log.result);
     setEditLearning(log.learning || "");
     setEditStatus(log.status);
+    setEditDueDate(log.dueDate ? log.dueDate.split('T')[0] : "");
   };
 
   const closeEditModal = () => {
@@ -260,6 +265,7 @@ export default function WorklogReportPage() {
           result: editResult,
           learning: editLearning,
           status: editStatus,
+          dueDate: editDueDate || null,
         }),
       });
       if (res.ok) {
@@ -389,6 +395,7 @@ export default function WorklogReportPage() {
               <th>Kategori</th>
               <th>Masalah</th>
               <th>Status</th>
+              <th>Target Selesai</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -423,6 +430,18 @@ export default function WorklogReportPage() {
                     }`}>
                       {log.status}
                     </span>
+                  </td>
+                  <td>
+                    {log.dueDate && (log.status === 'Proses' || log.status === 'Tertunda') ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span>{new Date(log.dueDate).toLocaleDateString("id-ID")}</span>
+                        {new Date(log.dueDate) < new Date(new Date().setHours(0,0,0,0)) && (
+                          <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 4px' }}>
+                            OVERDUE
+                          </span>
+                        )}
+                      </div>
+                    ) : "-"}
                   </td>
                   <td>
                     <div style={{ display: "flex", gap: "8px", flexDirection: "column" }}>
@@ -492,6 +511,13 @@ export default function WorklogReportPage() {
                 {isAdmin && <option value="Selesai">Selesai (Disetujui)</option>}
               </select>
             </div>
+            
+            {(editStatus === "Proses" || editStatus === "Tertunda") && (
+              <div className="form-group">
+                <label>Target Selesai (Tenggat Waktu)</label>
+                <input type="date" value={editDueDate} onChange={(e) => setEditDueDate(e.target.value)} />
+              </div>
+            )}
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
               <button className="btn-secondary" onClick={closeEditModal}>Batal</button>

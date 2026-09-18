@@ -45,6 +45,7 @@ model Worklog {
   actionPhoto String?  // Photo from gallery uploaded during action
   result      String
   learning    String?  // Apa yang dipelajari
+  dueDate     DateTime?
   status      String   // e.g. "Selesai", "Berjalan", dll
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
