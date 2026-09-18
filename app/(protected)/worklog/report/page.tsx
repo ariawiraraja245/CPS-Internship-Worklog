@@ -27,8 +27,9 @@ export default function WorklogReportPage() {
 
   // Filters
   const [filterUsername, setFilterUsername] = useState("");
-  const [filterDate, setFilterDate] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
+  const [dateFilterType, setDateFilterType] = useState("all");
+  const [dateFilterValue, setDateFilterValue] = useState("");
 
   // Edit Modal State
   const [editLog, setEditLog] = useState<any>(null);
@@ -45,8 +46,11 @@ export default function WorklogReportPage() {
     try {
       const params = new URLSearchParams();
       if (filterUsername) params.append("username", filterUsername);
-      if (filterDate) params.append("date", filterDate);
       if (filterCategory) params.append("category", filterCategory);
+      if (dateFilterType !== "all") {
+        params.append("filterType", dateFilterType);
+        params.append("filterValue", dateFilterValue);
+      }
 
       const res = await fetch(`/api/worklog/search?${params.toString()}`);
       if (res.ok) {
@@ -62,7 +66,7 @@ export default function WorklogReportPage() {
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [filterUsername, filterCategory, dateFilterType, dateFilterValue]);
 
   const toggleSelect = (id: string) => {
     const newSelected = new Set(selectedLogs);
@@ -308,33 +312,51 @@ export default function WorklogReportPage() {
 
       <div className="card" style={{ marginBottom: "24px" }}>
         <h3>Filter Pencarian</h3>
-        <div style={{ display: "flex", gap: "16px", marginTop: "16px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "16px", marginTop: "16px", flexWrap: "wrap", alignItems: "center" }}>
           {isAdmin && (
             <input 
               type="text" 
               placeholder="Nama User" 
               value={filterUsername} 
               onChange={e => setFilterUsername(e.target.value)}
-              style={{ width: "200px" }}
+              style={{ width: "150px", marginBottom: 0 }}
             />
           )}
-          <input 
-            type="date" 
-            value={filterDate} 
-            onChange={e => setFilterDate(e.target.value)}
-            style={{ width: "200px" }}
-          />
           <select 
             value={filterCategory} 
             onChange={e => setFilterCategory(e.target.value)}
-            style={{ width: "200px" }}
+            style={{ width: "180px", marginBottom: 0 }}
           >
             <option value="">Semua Kategori</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <button className="btn-primary" onClick={fetchLogs} disabled={loading}>
-            {loading ? "Mencari..." : "Cari"}
-          </button>
+          
+          <select 
+            value={dateFilterType} 
+            onChange={e => {
+              setDateFilterType(e.target.value);
+              setDateFilterValue("");
+            }}
+            style={{ width: "150px", marginBottom: 0 }}
+          >
+            <option value="all">Semua Waktu</option>
+            <option value="date">Harian</option>
+            <option value="week">Mingguan</option>
+            <option value="month">Bulanan</option>
+            <option value="year">Tahunan</option>
+          </select>
+
+          {dateFilterType !== "all" && (
+            <input 
+              type={dateFilterType === "year" ? "number" : dateFilterType}
+              min={dateFilterType === "year" ? "2000" : undefined}
+              max={dateFilterType === "year" ? "2100" : undefined}
+              placeholder={dateFilterType === "year" ? "YYYY" : undefined}
+              value={dateFilterValue} 
+              onChange={e => setDateFilterValue(e.target.value)}
+              style={{ width: "180px", marginBottom: 0 }}
+            />
+          )}
         </div>
       </div>
 
