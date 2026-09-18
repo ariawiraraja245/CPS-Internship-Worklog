@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  role               String    @default("USER") // "USER" or "ADMIN"
+  status             String    @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  attendances Attendance[]
+  worklogs    Worklog[]
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  date      DateTime @default(now())
+  status    String   // "HADIR" or "IZIN"
+  photoData String?  // Base64 encoded image or path
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Worklog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  date        DateTime @default(now())
+  category    String   // e.g. "IT", "Chemical & Laboratory", etc.
+  problem     String
+  action      String
+  actionPhoto String?  // Photo from gallery uploaded during action
+  result      String
+  learning    String?  // Apa yang dipelajari
+  status      String   // e.g. "Selesai", "Berjalan", dll
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
